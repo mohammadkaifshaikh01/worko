@@ -1,46 +1,76 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import List from './listui'; 
 
-const List = ({ referrals, changeStatus }) => {
+const ReferralList = () => {
+  const [referrals, setReferrals] = useState([]);
+
+  // Fetch referrals from Firebase Realtime Database
+  useEffect(() => {
+    const fetchReferrals = async () => {
+      try {
+        const response = await axios.get(
+          'https://referraldata-e7986-default-rtdb.firebaseio.com/referrals.json'
+        );
+        
+        const fetchedReferrals = [];
+        for (let key in response.data) {
+          fetchedReferrals.push({
+            id: key,
+            ...response.data[key]
+          });
+        }
+
+        setReferrals(fetchedReferrals);
+      } catch (error) {
+        console.error("Error fetching referrals:", error);
+      }
+    };
+
+    fetchReferrals();
+  }, []);
+
+  // Change status of referral
+  const changeStatus = async (index, status) => {
+    const updatedReferrals = [...referrals];
+    updatedReferrals[index].status = status;
+
+    try {
+      await axios.put(
+        `https://referraldata-e7986-default-rtdb.firebaseio.com/referrals/${updatedReferrals[index].id}.json`,
+        updatedReferrals[index]
+      );
+      setReferrals(updatedReferrals);
+    } catch (error) {
+      console.error("Error updating referral status:", error);
+    }
+  };
+
+  // Delete referral
+  const deleteReferral = async (index) => {
+    const referralId = referrals[index].id;
+
+    try {
+      await axios.delete(
+        `https://referraldata-e7986-default-rtdb.firebaseio.com/referrals/${referralId}.json`
+      );
+      const updatedReferrals = referrals.filter((_, i) => i !== index);
+      setReferrals(updatedReferrals);
+    } catch (error) {
+      console.error("Error deleting referral:", error);
+    }
+  };
+
   return (
     <div>
-  
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm text-left text-gray-500 border border-gray-200">
-        <thead className="text-xs text-gray-700 uppercase bg-gray-100">
-          <tr>
-            <th className="px-4 py-2 border">Name</th>
-            <th className="px-4 py-2 border">Email</th>
-            <th className="px-4 py-2 border">Experience</th>
-            <th className="px-4 py-2 border">Status</th>
-            <th className="px-4 py-2 border">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {referrals.map((referral, index) => (
-            <tr key={index} className="bg-white border-b hover:bg-gray-50">
-              <td className="px-4 py-2 border">{referral.name}</td>
-              <td className="px-4 py-2 border">{referral.email}</td>
-              <td className="px-4 py-2 border">{referral.experience}</td>
-              <td className="px-4 py-2 border">{referral.status}</td>
-              <td className="px-4 py-2 border">
-                <button
-                  onClick={() => changeStatus(index)}
-                  className="text-white bg-blue-500 hover:bg-blue-600 font-medium rounded px-3 py-1"
-                >
-                  Change Status
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h1 className="text-center text-2xl font-bold mt-10">Referral List</h1>
+      <List 
+        referrals={referrals} 
+        changeStatus={changeStatus} 
+        deleteReferral={deleteReferral} 
+      />
     </div>
-  
+  );
+};
 
-
-
-    </div>
-  )
-}
-
-export default List
+export default ReferralList;

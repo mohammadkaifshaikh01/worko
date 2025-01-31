@@ -7,12 +7,10 @@ import Referral from '../component/referral';
 const Page = () => {
   const [referrals, setReferrals] = useState([]);
 
-  // Function to add a new referral
   const addReferral = (newReferral) => {
     setReferrals([...referrals, newReferral]);
   };
 
-  // Function to change the status of a referral
   const changeStatus = (index) => {
     const updatedReferrals = [...referrals];
     const statuses = ['New', 'Evaluated', 'Hired', 'Rejected'];
